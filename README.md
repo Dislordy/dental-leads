@@ -11,6 +11,10 @@ websites. It does **not** scrape Google Maps pages.
 
 ## 1. Setup
 
+**Easiest:** install Python, then double-click `Start Dental Leads (Windows).bat` or
+`Start Dental Leads (Mac).command`. The launcher sets everything up on first run and opens the website.
+`START HERE.txt` walks through it step by step. The manual steps are below.
+
 You need Python 3.10 or newer.
 
 ```bash

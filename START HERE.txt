@@ -1,0 +1,50 @@
+DENTAL LEADS - QUICK START
+==========================
+
+This tool finds dental practices in McKinney, Allen, Plano, Frisco and Wylie, Texas. It ranks them by how well
+they fit your ideal customer and lists each one's head dentist, email, phone and website. It runs as a small
+website on your own computer.
+
+
+1) INSTALL PYTHON (one time)
+   Download it from https://www.python.org/downloads/ and install it.
+   Windows: on the first installer screen, tick "Add python.exe to PATH".
+
+
+2) START THE APP
+   Unzip this folder somewhere easy to find, such as Documents.
+
+   Windows: double-click  "Start Dental Leads (Windows).bat"
+            If Windows says "Windows protected your PC", click More info, then Run anyway.
+
+   Mac:     double-click  "Start Dental Leads (Mac).command"
+            If macOS says it can't be opened, right-click the file, choose Open, then click Open again.
+
+   The first start takes about a minute while it sets itself up. Your browser then opens the app
+   (at http://127.0.0.1:5000). Keep the black window open while you use the app; close it to stop.
+
+
+3) ADD YOUR GOOGLE API KEY (one time)
+   You need your own Google Places API key. Google charges for searches, so each person uses their own key.
+     a. Go to https://console.cloud.google.com and create a project.
+     b. Menu > Billing: add a card. Google requires one even within its free monthly allowance.
+     c. Search for "Places API (New)" and click Enable. Make sure it's the one marked (New).
+     d. Menu > APIs & Services > Credentials > Create credentials > API key. Copy the key.
+     e. Recommended: click the key, choose "Restrict key", tick Places API (New) and save.
+        Then under Billing > Budgets & alerts, set a monthly budget (e.g. $25) with email alerts.
+   In the app, open Settings, paste the key into "Google Places API key" and click Save settings.
+
+
+4) TRY A SMALL TEST
+   On the Search page, select only Plano and type 10 in "Stop after this many practices".
+   Click "Check cost" (about $0.04-$0.08), then "Start search".
+   When it finishes, click "View leads". You can download the results as Excel or CSV.
+
+   A full search of all five cities can make several hundred Google requests (roughly $10-$30).
+   The app always shows the maximum cost before it starts.
+
+
+GOOD TO KNOW
+- Emails marked "pattern guess" were never seen anywhere. Check them before sending.
+- Settings lets you change the ideal customer profile, scoring weights and chains to exclude.
+- Results and settings stay on your computer. README.md has the full details.
