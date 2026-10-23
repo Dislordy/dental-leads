@@ -3,3 +3,4 @@ data/
 output/
 .pytest_cache/
 __pycache__/
+settings.local.yaml

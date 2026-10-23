@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block page %}home{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Find dental practice leads</h1>
+    <p class="muted">Search Google for practices, read their websites, and rank them against your ideal customer profile.</p>
+  </div>
+</div>
+
+<div class="grid-3">
+  <div class="card stat">
+    <div class="label">Google Places key</div>
+    <div class="value">
+      {% if google_key %}<span class="pill good">Ready</span>
+      {% else %}<span class="pill bad">Missing</span> <a href="{{ url_for('settings') }}#keys">Add it</a>{% endif %}
+    </div>
+  </div>
+  <div class="card stat">
+    <div class="label">Hunter.io (optional)</div>
+    <div class="value">
+      {% if hunter_key %}<span class="pill good">On</span>{% else %}<span class="pill neutral">Off</span> <a href="{{ url_for('settings') }}#keys">Add key</a>{% endif %}
+    </div>
+  </div>
+  <div class="card stat">
+    <div class="label">Last finished search</div>
+    <div class="value">
+      {% set last = (runs | selectattr('finished_at') | list | first) %}
+      {% if last %}<a href="{{ url_for('leads', run=last.id) }}">{{ last.lead_count }} practices</a>
+        <span class="muted small">{{ last.finished_at | when }}</span>
+      {% else %}<span class="muted">None yet</span>{% endif %}
+    </div>
+  </div>
+</div>
+
+<section class="card" id="search-card">
+  <h2>New search</h2>
+  <form id="search-form">
+    <label class="field"><span>Cities</span></label>
+    <div class="chips" style="margin:-8px 0 16px">
+      {% for c in cities %}
+      <label class="chip"><input type="checkbox" name="cities" value="{{ c }}" checked><span>{{ c }}</span></label>
+      {% endfor %}
+    </div>
+    <div class="form-row">
+      <label class="field">
+        <span>Stop after this many practices <span class="muted">(optional)</span></span>
+        <input type="number" name="limit" min="1" placeholder="All" inputmode="numeric">
+        <div class="help">Try 10 with one city for a cheap first test.</div>
+      </label>
+      <div>
+        <label class="check" style="margin-top:28px">
+          <input type="checkbox" name="refresh">
+          <span>Fetch fresh data<br><span class="help">Ignores saved Google results. Costs more; use it to record new growth.</span></span>
+        </label>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn primary" type="submit" id="estimate-btn">Check cost</button>
+      <span class="muted small" id="form-msg" role="status"></span>
+    </div>
+  </form>
+
+  <div class="estimate" id="estimate" hidden>
+    <hr style="border:0;border-top:1px solid var(--border);margin:20px 0">
+    <h2>Cost estimate</h2>
+    <p class="cost-line" id="cost-line"></p>
+    <details><summary class="muted small" style="cursor:pointer;margin-bottom:8px">Details</summary><pre id="estimate-text"></pre></details>
+    <div class="btn-row">
+      <button class="btn primary" id="start-btn" type="button">Start search</button>
+      <button class="btn" id="cancel-estimate" type="button">Cancel</button>
+    </div>
+  </div>
+</section>
+
+<section class="card" id="job" {% if not job %}hidden{% endif %}>
+  <div class="job-head">
+    <h2 style="margin:0">Current search <span class="pill neutral" id="job-status">–</span></h2>
+    <div class="btn-row">
+      <a class="btn primary" id="job-view" href="#" hidden>View leads →</a>
+      <button class="btn danger" id="job-stop" type="button" hidden>Stop</button>
+    </div>
+  </div>
+  <div class="progress" id="job-progress"><div></div></div>
+  <p class="muted small" id="job-phase"></p>
+  <div class="log" id="job-log" aria-live="polite"></div>
+</section>
+
+<section>
+  <h2>Recent searches</h2>
+  {% if runs %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Started</th><th>Cities</th><th>Limit</th><th class="num">Practices</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for r in runs %}
+        <tr>
+          <td>{{ r.started_at | when }}</td>
+          <td>{{ r.cities.replace(',', ', ') }}</td>
+          <td>{{ r.args.limit or 'none' }}</td>
+          <td class="num">{{ r.lead_count if r.lead_count is not none else '–' }}</td>
+          <td>{% if r.finished_at %}<span class="pill good">Finished</span>{% elif job and job.run_id == r.id and job.status == 'running' %}<span class="pill info">Running</span>{% else %}<span class="pill neutral">Didn't finish</span>{% endif %}</td>
+          <td>{% if r.finished_at %}<a href="{{ url_for('leads', run=r.id) }}">View</a>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">No searches yet. Your searches will appear here.</p>
+  {% endif %}
+</section>
+{% endblock %}

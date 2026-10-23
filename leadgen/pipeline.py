@@ -70,6 +70,12 @@ def estimate(cfg, plan, places_client, limit):
     return "\n".join(lines), hi
 
 
+def estimate_for(cfg, cities, limit=None):
+    """Estimate text and the worst-case billable request count, without making requests."""
+    http = HttpClient(ResponseCache(cfg.cache_path), cfg["crawl"]["user_agent"])
+    return estimate(cfg, plan_searches(cfg, cities), PlacesClient(http, cfg), limit)
+
+
 def confirm(prompt="Proceed? [y/N] "):
     if not sys.stdin.isatty():
         print("No terminal to confirm on; re-run with --yes to proceed.")
@@ -196,7 +202,14 @@ def apply_exclusions(leads, cfg, cities):
 # Main entry
 # ---------------------------------------------------------------------------
 
-def run(cfg, cities, limit=None, yes=False, refresh=False, dry_run=False, args=None):
+def run(cfg, cities, limit=None, yes=False, refresh=False, dry_run=False, args=None,
+        progress=None, stop=None):
+    """Run the whole pipeline. Returns the list of leads, or None if it didn't complete.
+
+    progress(event: dict) is called as work advances (used by the web UI); stop is an optional
+    threading.Event that ends the run early, keeping whatever practices were fully processed.
+    """
+    progress = progress or (lambda event: None)
     out_dir = cfg.path("output_dir")
     cache = ResponseCache(cfg.cache_path)
     http = HttpClient(cache, cfg["crawl"]["user_agent"], timeout=cfg["crawl"]["timeout_seconds"],
@@ -217,14 +230,21 @@ def run(cfg, cities, limit=None, yes=False, refresh=False, dry_run=False, args=N
     db = LeadDB(cfg.path("database"))
     run_id = db.start_run(cities, args or {})
     started = time.time()
+    progress({"phase": "search", "done": 0, "total": len(plan), "run_id": run_id})
 
     try:
         found = collect(places_client, plan, cities, limit=limit,
-                        split_saturated=cfg.get("split_saturated_cells", True))
+                        split_saturated=cfg.get("split_saturated_cells", True),
+                        progress=lambda done, total: progress({"phase": "search", "done": done, "total": total}),
+                        stop=stop)
     except PlacesError as e:
         log.error("%s", e)
         return None
+    if stop and stop.is_set():
+        log.warning("stopped during the search; nothing saved (responses so far are cached, so a rerun is cheap)")
+        return None
     log.info("found %d unique dental practices; crawling websites...", len(found))
+    progress({"phase": "crawl", "done": 0, "total": len(found)})
 
     enricher = Enricher(cfg, http, list(cfg["cities"]))
     leads = []
@@ -236,6 +256,11 @@ def run(cfg, cities, limit=None, yes=False, refresh=False, dry_run=False, args=N
             log.info("[%d/%d] %s | %s | %s (%s) | age %s", i, len(futures), lead["name"],
                      lead["head_dentist"] or "dentist ?", lead["email"] or "no email",
                      lead["email_source"] or "-", lead["age_years"] if lead["age_years"] is not None else "?")
+            progress({"phase": "crawl", "done": i, "total": len(futures)})
+            if stop and stop.is_set():
+                log.warning("stopped by user; saving the %d practices finished so far", len(leads))
+                pool.shutdown(wait=True, cancel_futures=True)
+                break
 
     apply_exclusions(leads, cfg, list(cfg["cities"]))
     for lead in leads:
@@ -250,6 +275,7 @@ def run(cfg, cities, limit=None, yes=False, refresh=False, dry_run=False, args=N
     if enricher.hunter and enricher.hunter.disabled_reason:
         log.warning("Hunter: %s", enricher.hunter.disabled_reason)
     print_summary(leads, csv_path, xlsx_path)
+    progress({"phase": "done", "done": len(leads), "total": len(leads)})
     return leads
 
 

@@ -163,7 +163,7 @@ def is_dental(place):
     return bool(DENTAL_NAME_RE.search(place.get("displayName", {}).get("text", "")))
 
 
-def collect(client, plan, target_cities, limit=None, split_saturated=True):
+def collect(client, plan, target_cities, limit=None, split_saturated=True, progress=None, stop=None):
     """Run the plan, dedupe by place id and keep dental places located in target cities.
 
     Returns {place_id: {"place": raw, "city": str, "observed_at": ts, "queries": [..]}}.
@@ -173,6 +173,8 @@ def collect(client, plan, target_cities, limit=None, split_saturated=True):
     queue = list(plan)
     done = 0
     while queue:
+        if stop and stop.is_set():
+            break
         query, cell = queue.pop(0)
         places, fetched_at, saturated = client.search(query, cell, (limit - len(found)) if limit else None)
         done += 1
@@ -194,6 +196,8 @@ def collect(client, plan, target_cities, limit=None, split_saturated=True):
         if saturated and split_saturated and cell.depth == 0:
             log.info("  cell hit the 60-result cap; splitting it into 4 smaller cells")
             queue[0:0] = [(query, sub) for sub in cell.quarters()]
+        if progress:
+            progress(done, done + len(queue))
         if limit and len(found) >= limit:
             log.info("reached --limit %d, stopping search", limit)
             break

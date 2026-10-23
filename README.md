@@ -51,7 +51,38 @@ SKU; you then lose the review-date age signal.
 
 ---
 
-## 2. Running it
+## 2. Using the website (easiest)
+
+```bash
+python -m leadgen.web
+```
+
+This starts the app on your computer and opens <http://127.0.0.1:5000> in your browser. It has three pages:
+
+- **Settings:** paste your Google Places key (and optional Hunter key), then adjust your ideal customer profile,
+  scoring weights, chain list, search queries and email options. Keys go into `.env`; other changes go into
+  `settings.local.yaml`, which overrides `config.yaml`. **Reset to defaults** deletes the overrides.
+- **Search:** pick cities, optionally set "stop after N practices", and click **Check cost**. You see the maximum
+  number of billable Google requests and dollars before you click **Start search**. Progress and the live log appear
+  below, and **Stop** keeps whatever practices are already finished.
+- **Leads:** ranked results for any past search, with search, city, minimum-score and email filters, sortable columns,
+  click-to-expand details, and **Download CSV / Excel** buttons. Email badges show *verified on site*,
+  *found by Hunter* or *pattern guess*.
+
+The site only listens on your own computer by default. To open it from your phone on the same Wi-Fi, first set a
+password, which protects your keys and your Google credit:
+
+```bash
+echo "LEADGEN_WEB_PASSWORD=pick-a-long-password" >> .env
+python -m leadgen.web --host 0.0.0.0
+```
+
+Then browse to `http://<your-computer's-IP>:5000` and log in with any username and that password. Don't expose the
+app to the open internet.
+
+The command line below does the same things and shares the same settings, database and cache.
+
+## 3. Running from the command line
 
 **Start with a small test run:**
 
@@ -90,7 +121,7 @@ Output goes to `output/`:
 
 ---
 
-## 3. What's in the output
+## 4. What's in the output
 
 | Column | Meaning |
 |---|---|
@@ -121,7 +152,7 @@ Google doesn't publish opening dates, so three signals are combined:
 
 ---
 
-## 4. Scoring
+## 5. Scoring
 
 Everything lives in `config.yaml`:
 
@@ -151,7 +182,7 @@ Temporarily closed practices are not excluded, but their score is halved.
 
 ---
 
-## 5. Growth tracking
+## 6. Growth tracking
 
 Every run is stored in `data/leads.sqlite`:
 
@@ -169,7 +200,7 @@ and doesn't record a duplicate snapshot. Use `--refresh` to force fresh data.
 
 ---
 
-## 6. Website crawling
+## 7. Website crawling
 
 For each practice website the crawler:
 
@@ -185,7 +216,7 @@ Pages are cached for `cache.website_ttl_days`.
 
 ---
 
-## 7. Optional extras
+## 8. Optional extras
 
 ### Hunter.io
 
@@ -215,7 +246,7 @@ Leave `license_csv` empty to skip this step.
 
 ---
 
-## 8. Good-citizen notes
+## 9. Good-citizen notes
 
 - **Google's terms:** the Google Maps Platform terms limit how long you may store Places content other than Place
   IDs. Review them, and shorten `places_ttl_days` or prune old `snapshots` rows if your use requires it:
@@ -225,7 +256,7 @@ Leave `license_csv` empty to skip this step.
 
 ---
 
-## 9. Tests
+## 10. Tests
 
 ```bash
 pytest
@@ -233,7 +264,8 @@ pytest
 
 The end-to-end test runs the whole pipeline against local fake servers that stand in for Places, RDAP and a practice
 website. It checks robots.txt handling, pagination, exclusions, caching (a rerun makes no Google calls), `--limit`
-and the CSV/XLSX columns.
+and the CSV/XLSX columns. `test_web.py` drives the website the same way: saving settings and keys, estimating,
+running a search, viewing and downloading leads, validation, the cross-site POST block and the password.
 
 ## Layout
 
@@ -254,5 +286,6 @@ dental_leads/
     scoring.py        fit score + why-this-lead
     export.py         CSV / XLSX
     net.py            HTTP client: cache, retries with backoff, per-site rate limit
+    web/              Flask website: pages, background job runner, settings form
   tests/
 ```

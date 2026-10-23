@@ -81,3 +81,22 @@ class LeadDB:
 
     def commit(self):
         self.db.commit()
+
+    def recent_runs(self, n=20):
+        rows = self.db.execute(
+            "SELECT id, started_at, finished_at, cities, args, lead_count FROM runs"
+            " ORDER BY id DESC LIMIT ?", (n,)).fetchall()
+        return [{"id": r[0], "started_at": r[1], "finished_at": r[2], "cities": r[3],
+                 "args": json.loads(r[4] or "{}"), "lead_count": r[5]} for r in rows]
+
+    def latest_finished_run(self):
+        row = self.db.execute("SELECT MAX(id) FROM runs WHERE finished_at IS NOT NULL").fetchone()
+        return row[0] if row else None
+
+    def leads_for_run(self, run_id):
+        rows = self.db.execute("SELECT data FROM lead_history WHERE run_id = ? ORDER BY score DESC",
+                               (run_id,)).fetchall()
+        return [json.loads(r[0]) for r in rows]
+
+    def close(self):
+        self.db.close()

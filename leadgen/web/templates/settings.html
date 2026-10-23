@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Settings · Dental Leads{% endblock %}
+{% block page %}settings{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Settings</h1>
+    <p class="muted">Changes apply to the next search. They're saved in <code>settings.local.yaml</code>, which overrides <code>config.yaml</code>.</p>
+  </div>
+</div>
+
+{% if errors %}
+<div class="alert err" role="alert"><b>Not saved. Please fix:</b><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
+{% endif %}
+
+<form method="post" autocomplete="off">
+  <section class="card" id="keys">
+    <h2>API keys</h2>
+    <p class="muted small">Keys are saved in the <code>.env</code> file on this computer and are never shown again in full. Leave a box empty to keep the current key.</p>
+    <div class="form-grid">
+      {% for name, label, help in [
+          ("GOOGLE_PLACES_API_KEY", "Google Places API key", "Required. The README explains how to create one."),
+          ("HUNTER_API_KEY", "Hunter.io API key", "Optional. Finds emails when a practice's website lists none.")] %}
+      <div>
+        <label class="field">
+          <span>{{ label }}
+            {% if keys[name] %}<span class="pill good">{{ keys[name] }}</span>{% else %}<span class="pill neutral">not set</span>{% endif %}
+          </span>
+          <input type="password" name="{{ name }}" placeholder="{{ 'Enter a new key to replace it' if keys[name] else 'Paste key' }}">
+          <div class="help">{{ help }}</div>
+        </label>
+        {% if keys[name] %}
+        <label class="check small"><input type="checkbox" name="clear_{{ name }}"> <span>Remove this key</span></label>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  {% for title, fields in sections %}
+  <section class="card">
+    <h2>{{ title }}</h2>
+    <div class="form-grid">
+      {% for f in fields %}
+        {% if f.kind == 'types' %}
+        <div class="field wide">
+          <label class="field" style="margin-bottom:6px"><span>{{ f.label }}</span></label>
+          <div class="chips">
+            {% for t in types %}
+            <label class="chip"><input type="checkbox" name="{{ f.name }}" value="{{ t }}" {{ 'checked' if t in f.value }}><span>{{ t.replace('_', ' ') }}</span></label>
+            {% endfor %}
+          </div>
+          <div class="help" style="margin-bottom:14px">{{ f.help }}</div>
+        </div>
+        {% elif f.kind == 'bool' %}
+        <label class="check wide"><input type="checkbox" name="{{ f.name }}" {{ 'checked' if f.value }}> <span>{{ f.label }}{% if f.help %}<br><span class="help">{{ f.help }}</span>{% endif %}</span></label>
+        {% elif f.kind == 'lines' %}
+        <label class="field wide">
+          <span>{{ f.label }}</span>
+          <textarea name="{{ f.name }}" rows="6">{{ f.value }}</textarea>
+          {% if f.help %}<div class="help">{{ f.help }}</div>{% endif %}
+        </label>
+        {% else %}
+        <label class="field {{ 'wide' if f.kind == 'text' }}">
+          <span>{{ f.label }}</span>
+          <input type="{{ 'text' if f.kind == 'text' else 'number' }}" name="{{ f.name }}" value="{{ f.value }}"
+                 {% if f.kind != 'text' %}min="0" step="{{ '1' if f.kind == 'int' else 'any' }}" inputmode="decimal"{% endif %}>
+          {% if f.help %}<div class="help">{{ f.help }}</div>{% endif %}
+        </label>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+
+  <p class="muted small">City search areas are set in <code>config.yaml</code> under <code>cities</code>.</p>
+
+  <div class="sticky-save">
+    {% if local_exists %}
+    <button class="btn" type="submit" name="action" value="reset" formnovalidate
+            onclick="return confirm('Reset all settings to the defaults in config.yaml? Your API keys are kept.')">Reset to defaults</button>
+    {% endif %}
+    <button class="btn primary" type="submit" name="action" value="save">Save settings</button>
+  </div>
+</form>
+{% endblock %}

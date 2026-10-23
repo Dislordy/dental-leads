@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Dental Leads{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%230f766e' d='M7 2C4 2 2.5 4.5 2.5 7.5c0 3 1.2 4.6 1.9 7.3.6 2.6 1 7.2 3 7.2 1.8 0 1.9-5 4.6-5s2.8 5 4.6 5c2 0 2.4-4.6 3-7.2.7-2.7 1.9-4.3 1.9-7.3C21.5 4.5 20 2 17 2c-2.2 0-3.3 1.2-5 1.2S9.2 2 7 2z'/></svg>">
+</head>
+<body data-page="{% block page %}{% endblock %}">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="{{ url_for('home') }}">
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 2C4 2 2.5 4.5 2.5 7.5c0 3 1.2 4.6 1.9 7.3.6 2.6 1 7.2 3 7.2 1.8 0 1.9-5 4.6-5s2.8 5 4.6 5c2 0 2.4-4.6 3-7.2.7-2.7 1.9-4.3 1.9-7.3C21.5 4.5 20 2 17 2c-2.2 0-3.3 1.2-5 1.2S9.2 2 7 2z"/></svg>
+        <span class="brand-text">Dental Leads</span>
+      </a>
+      <nav class="nav">
+        <a href="{{ url_for('home') }}" class="{{ 'active' if nav == 'home' }}">Search</a>
+        <a href="{{ url_for('leads') }}" class="{{ 'active' if nav == 'leads' }}">Leads</a>
+        <a href="{{ url_for('settings') }}" class="{{ 'active' if nav == 'settings' }}">Settings</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    {% with messages = get_flashed_messages() %}
+      {% for m in messages %}<div class="alert ok" role="status">{{ m }}</div>{% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

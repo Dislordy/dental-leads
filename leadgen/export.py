@@ -52,18 +52,31 @@ def to_frame(leads):
 def write_outputs(leads, out_dir):
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    keep = [l for l in leads if not l["exclude_reason"]]
-    excluded = [l for l in leads if l["exclude_reason"]]
-    df, df_x = to_frame(keep), to_frame(excluded)
-
     csv_path, xlsx_path = out_dir / "leads.csv", out_dir / "leads.xlsx"
-    df.to_csv(csv_path, index=False, encoding="utf-8-sig")
-    with pd.ExcelWriter(xlsx_path, engine="openpyxl") as xw:
+    write_csv(leads, csv_path)
+    write_xlsx(leads, xlsx_path)
+    return csv_path, xlsx_path
+
+
+def write_csv(leads, target):
+    """Kept leads only (no chains/closed). target is a path or a binary file object."""
+    data = to_frame([l for l in leads if not l["exclude_reason"]]).to_csv(index=False)
+    data = data.encode("utf-8-sig")
+    if hasattr(target, "write"):
+        target.write(data)
+    else:
+        Path(target).write_bytes(data)
+
+
+def write_xlsx(leads, target):
+    """'Leads' and 'Excluded' sheets. target is a path or a binary file object."""
+    df = to_frame([l for l in leads if not l["exclude_reason"]])
+    df_x = to_frame([l for l in leads if l["exclude_reason"]])
+    with pd.ExcelWriter(target, engine="openpyxl") as xw:
         df.to_excel(xw, sheet_name="Leads", index=False)
         df_x.to_excel(xw, sheet_name="Excluded", index=False)
         for name in ("Leads", "Excluded"):
             _format(xw.book[name])
-    return csv_path, xlsx_path
 
 
 def _format(ws):
