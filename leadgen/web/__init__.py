@@ -72,8 +72,7 @@ def create_app(password=None):
         rows = d.leads_for_run(run_id) if run_id else []
         d.close()
         run = next((r for r in runs if r["id"] == run_id), None)
-        return render_template("leads.html", runs=runs, run=run, run_id=run_id, leads=rows,
-                               cities=sorted({l["city"] for l in rows}))
+        return render_template("leads.html", runs=runs, run=run, run_id=run_id, leads=rows)
 
     @app.get("/leads/<int:run_id>.<fmt>")
     def download(run_id, fmt):

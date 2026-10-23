@@ -1,6 +1,10 @@
 DENTAL LEADS - QUICK START
 ==========================
 
+IF SOMEONE SENT YOU THE WEBSITE LINK AND PASSWORD:
+   You don't need to install anything. Open https://dislordy.github.io/dental-leads/ and enter the password.
+   The steps below are only for running the tool on your own computer.
+
 This tool finds dental practices in McKinney, Allen, Plano, Frisco and Wylie, Texas. It ranks them by how well
 they fit your ideal customer and lists each one's head dentist, email, phone and website. It runs as a small
 website on your own computer.

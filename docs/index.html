@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Dental Leads</title>
+  <link rel="stylesheet" href="app.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%230f766e' d='M7 2C4 2 2.5 4.5 2.5 7.5c0 3 1.2 4.6 1.9 7.3.6 2.6 1 7.2 3 7.2 1.8 0 1.9-5 4.6-5s2.8 5 4.6 5c2 0 2.4-4.6 3-7.2.7-2.7 1.9-4.3 1.9-7.3C21.5 4.5 20 2 17 2c-2.2 0-3.3 1.2-5 1.2S9.2 2 7 2z'/></svg>">
+</head>
+<body data-page="published">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <span class="brand">
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 2C4 2 2.5 4.5 2.5 7.5c0 3 1.2 4.6 1.9 7.3.6 2.6 1 7.2 3 7.2 1.8 0 1.9-5 4.6-5s2.8 5 4.6 5c2 0 2.4-4.6 3-7.2.7-2.7 1.9-4.3 1.9-7.3C21.5 4.5 20 2 17 2c-2.2 0-3.3 1.2-5 1.2S9.2 2 7 2z"/></svg>
+        <span>Dental Leads</span>
+      </span>
+    </div>
+  </header>
+  <main>
+    <section class="card" id="unlock" style="max-width:420px;margin:48px auto">
+      <h1>Dental Leads</h1>
+      <p class="muted">Enter the password to see the latest practices.</p>
+      <form id="unlock-form">
+        <label class="field"><span>Password</span>
+          <input type="password" id="password" autocomplete="current-password" required autofocus>
+        </label>
+        <label class="check small"><input type="checkbox" id="remember" checked> <span>Remember on this device</span></label>
+        <div class="btn-row">
+          <button class="btn primary" type="submit">Unlock</button>
+          <span class="muted small" id="unlock-msg" role="status"></span>
+        </div>
+      </form>
+    </section>
+
+    <section class="card empty" id="no-data" hidden>
+      <h2>No leads published yet</h2>
+      <p>The first automatic search hasn't finished. Check back after it runs.</p>
+    </section>
+
+    <div id="content" hidden>
+      <div class="page-head">
+        <div>
+          <h1>Leads</h1>
+          <p class="muted" id="updated"></p>
+        </div>
+        <div class="btn-row">
+          <a class="btn" id="dl-csv" href="#">Download CSV</a>
+          <a class="btn primary" id="dl-xlsx" href="#">Download Excel</a>
+          <button class="btn" id="lock" type="button">Lock</button>
+        </div>
+      </div>
+      <div id="leads-area">
+        
+<div class="summary" id="summary"></div>
+
+<div class="filters">
+  <div class="search">
+    <label for="f-text">Search</label>
+    <input type="search" id="f-text" placeholder="Practice, dentist, email, address…">
+  </div>
+  <div>
+    <label for="f-city">City</label>
+    <select id="f-city"><option value="">All cities</option></select>
+  </div>
+  <div>
+    <label for="f-score">Minimum score</label>
+    <input type="number" id="f-score" min="0" max="100" value="0" inputmode="numeric">
+  </div>
+  <div>
+    <label for="f-email">Email</label>
+    <select id="f-email">
+      <option value="">Any</option>
+      <option value="has">Has an email</option>
+      <option value="confirmed">Found on website or by Hunter</option>
+      <option value="website">Verified on the practice website</option>
+      <option value="none">No email</option>
+    </select>
+  </div>
+  <label class="check"><input type="checkbox" id="f-excluded"> <span>Show excluded</span></label>
+</div>
+
+<div class="table-wrap">
+  <table id="leads-table">
+    <thead>
+      <tr>
+        <th class="sortable" data-key="score">Score</th>
+        <th class="sortable" data-key="name">Practice</th>
+        <th class="sortable" data-key="head_dentist">Head dentist</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th class="sortable num" data-key="rating">Rating</th>
+        <th class="sortable num" data-key="review_count">Reviews</th>
+        <th class="sortable num" data-key="age_years">Age</th>
+        <th class="sortable num" data-key="velocity">Reviews/mo</th>
+        <th>Why this lead</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+<p class="muted small" style="margin-top:10px">Click a row for details. "Pattern guess" emails weren't seen anywhere, so check them before sending.</p>
+      </div>
+    </div>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+name: Find dental leads
+
+on:
+  schedule:
+    # 13:17 UTC on the 1st of every month (8:17 AM Central in summer, 7:17 AM in winter).
+    # Each full run costs roughly $10-30 in Google Places API usage. Change or remove this to run less often.
+    - cron: "17 13 1 * *"
+  workflow_dispatch:            # adds a "Run workflow" button on the Actions tab
+    inputs:
+      cities:
+        description: "Cities, comma-separated (blank = all five)"
+        required: false
+        default: ""
+      limit:
+        description: "Stop after this many practices (blank = no limit; 10 = cheap test)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write               # saves the published leads and encrypted history back to the repo
+
+concurrency:
+  group: find-dental-leads
+  cancel-in-progress: false
+
+jobs:
+  find-leads:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+      HUNTER_API_KEY: ${{ secrets.HUNTER_API_KEY }}
+      LEADGEN_SITE_PASSWORD: ${{ secrets.LEADGEN_SITE_PASSWORD }}
+      CITIES: ${{ inputs.cities }}
+      LIMIT: ${{ inputs.limit }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install packages
+        run: pip install -r requirements.txt
+
+      - name: Check secrets
+        run: |
+          missing=""
+          [ -z "$GOOGLE_PLACES_API_KEY" ] && missing="$missing GOOGLE_PLACES_API_KEY"
+          [ -z "$LEADGEN_SITE_PASSWORD" ] && missing="$missing LEADGEN_SITE_PASSWORD"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing secret(s):$missing. Add them under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+      - name: Restore history
+        run: python -m leadgen.publish restore
+
+      - name: Find and rank practices
+        run: python -m leadgen --yes ${CITIES:+--city "$CITIES"} ${LIMIT:+--limit "$LIMIT"}
+
+      - name: Publish website
+        run: python -m leadgen.publish build
+
+      - name: Save to repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898733+github-actions[bot]@users.noreply.github.com"
+          git add docs state
+          if git diff --cached --quiet; then
+            echo "Nothing new to save."
+            exit 0
+          fi
+          git commit -m "Leads update $(date -u +%Y-%m-%d)"
+          for i in 1 2 3; do
+            git pull --rebase origin "${{ github.ref_name }}" && git push && exit 0
+            sleep $((i * 5))
+          done
+          exit 1
+
+      - name: Keep the run log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-log
+          path: output/run.log
+          if-no-files-found: ignore
+          retention-days: 30

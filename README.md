@@ -9,6 +9,35 @@ websites. It does **not** scrape Google Maps pages.
 
 ---
 
+## Automatic website (no install needed)
+
+GitHub can run the search for you every month and publish the results to a password-protected website. Anyone you
+give the link and password to can open it on any phone or computer. One-time setup:
+
+1. **Make the repository public:** **Settings → General → Danger Zone → Change visibility → Public**. Free GitHub
+   accounts can only publish websites from public repositories. The leads stay private: they're encrypted with your
+   password before they're saved, and the code contains no keys.
+2. **Add the secrets:** go to **Settings → Secrets and variables → Actions → New repository secret** and add:
+   - `GOOGLE_PLACES_API_KEY`: your Google key.
+   - `LEADGEN_SITE_PASSWORD`: the password for the website, at least 8 characters. Anyone with it can see the leads.
+   - `HUNTER_API_KEY`: optional.
+3. **Turn on the website:** go to **Settings → Pages**, and under "Build and deployment" choose **Deploy from a
+   branch**, branch **main**, folder **/docs**, then **Save**.
+4. **Run the first search:** go to **Actions → Find dental leads → Run workflow**. For a cheap first test, type
+   `Plano` and limit `10`; leave both blank for everything. A full run takes about 15–45 minutes.
+5. **Open the website:** <https://dislordy.github.io/dental-leads/>. Enter the password and you'll see the leads,
+   with filters and Excel/CSV downloads.
+
+After that it runs by itself at 13:17 UTC on the 1st of every month. Each full run costs roughly **$10–30** in
+Google usage on your key. To change the schedule, edit the `cron` line in `.github/workflows/find-leads.yml`, or
+delete the `schedule:` block to run only when you click **Run workflow**.
+
+How it works: the workflow restores the encrypted history (`state/`), runs the search, then writes the encrypted
+leads to `docs/data.enc.json` and commits them. The page decrypts them in the browser after you type the password.
+If you change `LEADGEN_SITE_PASSWORD` later, delete `state/leads.sqlite.enc`; growth tracking then starts over.
+
+---
+
 ## 1. Setup
 
 **Easiest:** install Python, then double-click `Start Dental Leads (Windows).bat` or
@@ -292,5 +321,9 @@ dental-leads/
     export.py         CSV / XLSX
     net.py            HTTP client: cache, retries with backoff, per-site rate limit
     web/              Flask website: pages, background job runner, settings form
+    publish.py        encrypted GitHub Pages site + history for the monthly GitHub Action
+  .github/workflows/  find-leads.yml: the monthly automatic run
+  docs/               the published website (GitHub Pages)
+  state/              encrypted run history used by the automatic run
   tests/
 ```

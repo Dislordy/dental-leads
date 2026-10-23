@@ -1,0 +1,49 @@
+{# Shared by the local Leads page and the published GitHub Pages site. #}
+<div class="summary" id="summary"></div>
+
+<div class="filters">
+  <div class="search">
+    <label for="f-text">Search</label>
+    <input type="search" id="f-text" placeholder="Practice, dentist, email, address…">
+  </div>
+  <div>
+    <label for="f-city">City</label>
+    <select id="f-city"><option value="">All cities</option></select>
+  </div>
+  <div>
+    <label for="f-score">Minimum score</label>
+    <input type="number" id="f-score" min="0" max="100" value="0" inputmode="numeric">
+  </div>
+  <div>
+    <label for="f-email">Email</label>
+    <select id="f-email">
+      <option value="">Any</option>
+      <option value="has">Has an email</option>
+      <option value="confirmed">Found on website or by Hunter</option>
+      <option value="website">Verified on the practice website</option>
+      <option value="none">No email</option>
+    </select>
+  </div>
+  <label class="check"><input type="checkbox" id="f-excluded"> <span>Show excluded</span></label>
+</div>
+
+<div class="table-wrap">
+  <table id="leads-table">
+    <thead>
+      <tr>
+        <th class="sortable" data-key="score">Score</th>
+        <th class="sortable" data-key="name">Practice</th>
+        <th class="sortable" data-key="head_dentist">Head dentist</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th class="sortable num" data-key="rating">Rating</th>
+        <th class="sortable num" data-key="review_count">Reviews</th>
+        <th class="sortable num" data-key="age_years">Age</th>
+        <th class="sortable num" data-key="velocity">Reviews/mo</th>
+        <th>Why this lead</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+<p class="muted small" style="margin-top:10px">Click a row for details. "Pattern guess" emails weren't seen anywhere, so check them before sending.</p>

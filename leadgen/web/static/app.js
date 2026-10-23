@@ -137,9 +137,14 @@
     const select = $("#run-select");
     if (select) select.addEventListener("change", () => { location.href = `/leads?run=${select.value}`; });
     const dataEl = $("#leads-data");
-    if (!dataEl) return;
-    const leads = JSON.parse(dataEl.textContent);
+    if (dataEl) setupLeadsTable(JSON.parse(dataEl.textContent));
+  }
+
+  // Filterable, sortable leads table (templates/_leads_table.html). Used by both sites.
+  function setupLeadsTable(leads) {
     const tbody = $("#leads-table tbody");
+    const citySelect = $("#f-city");
+    [...new Set(leads.map((l) => l.city).filter(Boolean))].sort().forEach((c) => citySelect.add(new Option(c, c)));
     let sortKey = "score";
     let sortDir = -1;
     const open = new Set();
@@ -271,7 +276,83 @@
     render();
   }
 
+  // ------------------------------------------------------------------ Published site (GitHub Pages)
+
+  const b64bytes = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+
+  async function decryptBundle(bundle, password) {
+    const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]);
+    const key = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", hash: "SHA-256", salt: b64bytes(bundle.salt), iterations: bundle.iter },
+      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+    const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64bytes(bundle.iv) }, key, b64bytes(bundle.data));
+    return JSON.parse(new TextDecoder().decode(plain));
+  }
+
+  function storage(action, value) {
+    try {
+      if (action === "get") return localStorage.getItem("dental-leads-pw");
+      if (action === "set") localStorage.setItem("dental-leads-pw", value);
+      if (action === "clear") localStorage.removeItem("dental-leads-pw");
+    } catch { /* private mode or blocked storage: just don't remember */ }
+    return null;
+  }
+
+  async function initPublished() {
+    const form = $("#unlock-form");
+    const msg = $("#unlock-msg");
+    let bundle;
+    try {
+      const res = await fetch(`data.enc.json?t=${Date.now()}`);
+      if (!res.ok) throw new Error();
+      bundle = await res.json();
+    } catch {
+      $("#unlock").hidden = true;
+      $("#no-data").hidden = false;
+      return;
+    }
+
+    async function unlock(password, remember) {
+      msg.textContent = "Unlocking…";
+      let data;
+      try {
+        data = await decryptBundle(bundle, password);
+      } catch {
+        storage("clear");
+        msg.textContent = "That password didn't work.";
+        return;
+      }
+      if (remember) storage("set", password);
+      msg.textContent = "";
+      $("#unlock").hidden = true;
+      $("#content").hidden = false;
+      $("#updated").textContent = `Updated ${new Date(data.generated_at * 1000).toLocaleString()} · ${data.run.cities.replaceAll(",", ", ")}`;
+      for (const [id, field, type, name] of [
+        ["#dl-xlsx", "xlsx_b64", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "dental-leads.xlsx"],
+        ["#dl-csv", "csv_b64", "text/csv", "dental-leads.csv"],
+      ]) {
+        const link = $(id);
+        link.href = URL.createObjectURL(new Blob([b64bytes(data[field])], { type }));
+        link.download = name;
+      }
+      if (data.leads.length) {
+        setupLeadsTable(data.leads);
+      } else {
+        $("#leads-area").innerHTML = '<div class="card empty"><h2>No practices found</h2><p>The last search found no practices.</p></div>';
+      }
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      unlock($("#password").value, $("#remember").checked);
+    });
+    $("#lock").addEventListener("click", () => { storage("clear"); location.reload(); });
+    const saved = storage("get");
+    if (saved) unlock(saved, true);
+  }
+
   const page = document.body.dataset.page;
   if (page === "home") initHome();
   if (page === "leads") initLeads();
+  if (page === "published") initPublished();
 })();
