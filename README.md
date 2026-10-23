@@ -15,10 +15,11 @@ websites. It does **not** scrape Google Maps pages.
 `Start Dental Leads (Mac).command`. The launcher sets everything up on first run and opens the website.
 `START HERE.txt` walks through it step by step. The manual steps are below.
 
-You need Python 3.10 or newer.
+You need Python 3.10 or newer. Get the code with **Code → Download ZIP** on GitHub (then unzip it), or:
 
 ```bash
-cd dental_leads
+git clone https://github.com/Dislordy/dental-leads.git
+cd dental-leads
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
@@ -274,7 +275,7 @@ running a search, viewing and downloading leads, validation, the cross-site POST
 ## Layout
 
 ```
-dental_leads/
+dental-leads/
   config.yaml         ICP, weights, cities, queries, crawl + cache settings
   .env.example        copy to .env
   leadgen/
